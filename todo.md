@@ -327,7 +327,472 @@
 
 ---
 
-## 💰 Phase 5: Paywall & Monetization (Day 5)
+## 🤖 Phase 4.5: Backend & AI Integration (Days 4.5-5) **[CRITICAL - MAKE IT WORK!]**
+
+### 4.5.1 PDF/DOCX Text Extraction
+- [ ] Install PDF parsing library
+  ```bash
+  npm install pdf-parse
+  npm install mammoth  # for DOCX
+  ```
+- [ ] Create `src/utils/extractText.js`:
+  - [ ] `extractFromPDF(file)` - Extract text from PDF
+  - [ ] `extractFromDOCX(file)` - Extract text from DOCX
+  - [ ] `extractText(file)` - Main function that detects type
+  - [ ] Handle multi-page PDFs
+  - [ ] Handle formatting (preserve structure)
+  - [ ] Error handling for corrupted files
+  - [ ] Return structured text object
+
+### 4.5.2 AI API Integration (Choose ONE)
+
+#### Option A: OpenAI GPT-4 (Recommended)
+- [ ] Install OpenAI SDK
+  ```bash
+  npm install openai
+  ```
+- [ ] Add to `.env`:
+  ```
+  VITE_OPENAI_API_KEY=sk-...
+  ```
+- [ ] Create `src/services/openai.js`:
+  - [ ] Initialize OpenAI client
+  - [ ] `analyzeResume(resumeText, mode)` function
+  - [ ] Prompt engineering for roast generation
+  - [ ] Prompt for ATS score calculation
+  - [ ] Prompt for fixes generation
+  - [ ] Return structured JSON response
+  - [ ] Handle rate limits
+  - [ ] Handle API errors
+
+#### Option B: Google Gemini (Free tier available)
+- [ ] Install Gemini SDK
+  ```bash
+  npm install @google/generative-ai
+  ```
+- [ ] Add to `.env`:
+  ```
+  VITE_GEMINI_API_KEY=...
+  ```
+- [ ] Create `src/services/gemini.js`:
+  - [ ] Initialize Gemini client
+  - [ ] `analyzeResume(resumeText, mode)` function
+  - [ ] Same prompts as OpenAI
+  - [ ] Return structured JSON response
+
+### 4.5.3 AI Prompt Engineering
+- [ ] Create `src/prompts/resumeAnalysis.js`:
+  - [ ] **System Prompt:**
+    ```
+    You are a brutal but helpful resume critic. Analyze resumes and provide:
+    1. ATS score (0-100) based on formatting, keywords, impact, clarity
+    2. Savage roast (funny, harsh but constructive)
+    3. Mild roast (constructive, professional)
+    4. Actionable fixes (before/after examples)
+    ```
+  - [ ] **Roast Prompt (Savage):**
+    - Funny, sarcastic, but educational
+    - Point out clichés, weak verbs, missing metrics
+    - Use emojis and personality
+  - [ ] **Roast Prompt (Mild):**
+    - Professional, constructive
+    - Same issues but nicer tone
+  - [ ] **ATS Score Prompt:**
+    - Calculate score based on:
+      - Formatting (25 points)
+      - Keywords (25 points)
+      - Impact/metrics (25 points)
+      - Clarity (25 points)
+    - Return breakdown
+  - [ ] **Fixes Prompt:**
+    - Identify 5-10 specific issues
+    - Provide before/after examples
+    - Categorize (Summary, Experience, Skills, etc.)
+    - Prioritize by impact
+
+### 4.5.4 Resume Analysis Service
+- [ ] Create `src/services/resumeAnalyzer.js`:
+  - [ ] `analyzeResume(file, roastMode)` - Main function
+  - [ ] Steps:
+    1. [ ] Extract text from file
+    2. [ ] Call AI API with prompts
+    3. [ ] Parse AI response
+    4. [ ] Structure data for frontend
+    5. [ ] Handle errors gracefully
+  - [ ] Return format:
+    ```javascript
+    {
+      atsScore: {
+        score: 47,
+        breakdown: {
+          formatting: 65,
+          keywords: 35,
+          impact: 40,
+          clarity: 50
+        }
+      },
+      roast: {
+        mild: "...",
+        savage: "..."
+      },
+      fixes: [
+        {
+          category: "Summary",
+          issue: "...",
+          before: "...",
+          after: "..."
+        }
+      ]
+    }
+    ```
+
+### 4.5.5 Supabase Edge Functions (Backend)
+- [ ] Install Supabase CLI
+  ```bash
+  npm install -g supabase
+  ```
+- [ ] Initialize Supabase functions
+  ```bash
+  supabase functions new analyze-resume
+  ```
+- [ ] Create `supabase/functions/analyze-resume/index.ts`:
+  - [ ] Accept POST request with file
+  - [ ] Extract text from file
+  - [ ] Call OpenAI/Gemini API
+  - [ ] Return analysis JSON
+  - [ ] Handle CORS
+  - [ ] Rate limiting (max 10/hour per IP)
+  - [ ] Error handling
+  - [ ] Log to `analysis_log` table
+- [ ] Deploy function:
+  ```bash
+  supabase functions deploy analyze-resume
+  ```
+
+### 4.5.6 Update Frontend to Use Real API
+- [ ] Update `src/components/landing/UploadZone.jsx`:
+  - [ ] Replace mock `processFile()` with real API call
+  - [ ] Call `analyzeResume(file, 'savage')`
+  - [ ] Show loading state during API call
+  - [ ] Handle API errors (show user-friendly message)
+  - [ ] Navigate to results with real data
+- [ ] Update `src/pages/Results.jsx`:
+  - [ ] Remove `mockResumeData` import
+  - [ ] Use data from navigation state
+  - [ ] Handle missing data gracefully
+  - [ ] Show loading skeleton if data is still processing
+
+### 4.5.7 Error Handling & Edge Cases
+- [ ] Handle API failures:
+  - [ ] Network errors
+  - [ ] API rate limits
+  - [ ] Invalid API keys
+  - [ ] Timeout (>30 seconds)
+- [ ] Handle file parsing errors:
+  - [ ] Corrupted PDFs
+  - [ ] Password-protected files
+  - [ ] Scanned images (no text)
+  - [ ] Empty files
+- [ ] User-friendly error messages:
+  - [ ] "Oops! Our AI is taking a coffee break. Try again?"
+  - [ ] "This file is more encrypted than Fort Knox. Try a different one?"
+  - [ ] "We couldn't read this file. Is it actually a resume?"
+
+### 4.5.8 Testing Real Integration
+- [ ] Test with real resume PDFs:
+  - [ ] Well-formatted resume → High score
+  - [ ] Poorly-formatted resume → Low score
+  - [ ] Resume with clichés → Savage roast
+- [ ] Test error scenarios:
+  - [ ] Invalid API key
+  - [ ] Network offline
+  - [ ] Corrupted file
+- [ ] Test performance:
+  - [ ] Analysis completes in <10 seconds
+  - [ ] Loading states show properly
+  - [ ] No UI freezing
+
+### 4.5.9 Cost Optimization
+- [ ] Implement caching:
+  - [ ] Cache analysis results by file hash
+  - [ ] Avoid re-analyzing same resume
+- [ ] Implement rate limiting:
+  - [ ] Max 10 analyses per IP per hour
+  - [ ] Show "Try again in X minutes" message
+- [ ] Monitor API costs:
+  - [ ] Track OpenAI/Gemini token usage
+  - [ ] Set budget alerts
+  - [ ] Consider switching to cheaper models for MVP
+
+### 4.5.10 Environment Variables
+- [ ] Update `.env.example`:
+  ```
+  # AI API (choose one)
+  VITE_OPENAI_API_KEY=sk-...
+  VITE_GEMINI_API_KEY=...
+  
+  # Supabase
+  VITE_SUPABASE_URL=https://...
+  VITE_SUPABASE_ANON_KEY=...
+  
+  # App
+  VITE_APP_URL=http://localhost:5173
+  ```
+- [ ] Add to `.gitignore`:
+  ```
+  .env
+  .env.local
+  ```
+
+---
+
+## � Phase 4.75: Authentication & User Management (Days 5.5-6) **[CRITICAL FOR PRODUCTION]**
+
+### 4.75.1 Supabase Authentication Setup
+- [ ] Create Supabase project (if not already done)
+- [ ] Enable authentication providers:
+  - [ ] Google OAuth (primary)
+  - [ ] Email/Password (fallback)
+  - [ ] GitHub OAuth (optional)
+- [ ] Configure OAuth redirect URLs:
+  - [ ] Development: `http://localhost:5173/auth/callback`
+  - [ ] Production: `https://yourdomain.com/auth/callback`
+- [ ] Set up email templates:
+  - [ ] Welcome email
+  - [ ] Password reset
+  - [ ] Email confirmation
+- [ ] Configure JWT settings:
+  - [ ] Token expiration (7 days)
+  - [ ] Refresh token rotation
+  - [ ] Secure secret key
+
+### 4.75.2 Database Schema (Supabase)
+- [ ] Create `users` table:
+  ```sql
+  - id (uuid, primary key, references auth.users)
+  - email (text, unique)
+  - full_name (text)
+  - avatar_url (text)
+  - subscription_tier (text: 'free', 'basic', 'pro')
+  - credits_remaining (int, default: 10)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+  ```
+- [ ] Create `resumes` table:
+  ```sql
+  - id (uuid, primary key)
+  - user_id (uuid, references users.id)
+  - file_name (text)
+  - file_url (text, Supabase Storage)
+  - file_type (text: 'pdf', 'docx')
+  - file_size (int)
+  - version (int, default: 1)
+  - created_at (timestamp)
+  ```
+- [ ] Create `analyses` table:
+  ```sql
+  - id (uuid, primary key)
+  - user_id (uuid, references users.id)
+  - resume_id (uuid, references resumes.id)
+  - ats_score (int)
+  - ats_breakdown (jsonb)
+  - roast_savage (text)
+  - roast_mild (text)
+  - fixes (jsonb)
+  - roast_mode (text: 'savage', 'mild')
+  - processing_time (int)
+  - created_at (timestamp)
+  ```
+- [ ] Create `user_activity` table:
+  ```sql
+  - id (uuid, primary key)
+  - user_id (uuid, references users.id)
+  - action (text: 'upload', 'analyze', 'download', 'share')
+  - metadata (jsonb)
+  - created_at (timestamp)
+  ```
+- [ ] Set up Row Level Security (RLS):
+  - [ ] Users can only read/write their own data
+  - [ ] Enable RLS on all tables
+  - [ ] Create policies for CRUD operations
+
+### 4.75.3 Supabase Storage
+- [ ] Create `resumes` bucket:
+  - [ ] Private bucket (user-specific access)
+  - [ ] Max file size: 5MB
+  - [ ] Allowed types: PDF, DOCX
+  - [ ] Auto-delete after 30 days (optional)
+- [ ] Create `avatars` bucket:
+  - [ ] Public bucket
+  - [ ] Max file size: 2MB
+  - [ ] Allowed types: JPG, PNG, WEBP
+
+### 4.75.4 Authentication Service
+- [ ] Create `src/services/auth.js`:
+  - [ ] `signInWithGoogle()` - Google OAuth
+  - [ ] `signInWithEmail(email, password)` - Email login
+  - [ ] `signUpWithEmail(email, password, name)` - Email signup
+  - [ ] `signOut()` - Logout
+  - [ ] `getCurrentUser()` - Get current user
+  - [ ] `updateProfile(data)` - Update user profile
+  - [ ] `resetPassword(email)` - Password reset
+  - [ ] `onAuthStateChange(callback)` - Listen to auth changes
+- [ ] JWT token management:
+  - [ ] Store in httpOnly cookies (secure)
+  - [ ] Auto-refresh on expiration
+  - [ ] Clear on logout
+
+### 4.75.5 Auth Context & Provider
+- [ ] Create `src/contexts/AuthContext.jsx`:
+  - [ ] Provide user state globally
+  - [ ] Handle auth state changes
+  - [ ] Provide auth functions (login, logout, etc.)
+  - [ ] Loading states
+  - [ ] Error handling
+- [ ] Wrap app with AuthProvider in `main.jsx`
+
+### 4.75.6 Protected Routes
+- [ ] Create `src/components/auth/ProtectedRoute.jsx`:
+  - [ ] Check if user is authenticated
+  - [ ] Redirect to login if not
+  - [ ] Show loading state while checking
+- [ ] Protect routes:
+  - [ ] `/results` - Requires auth
+  - [ ] `/dashboard` - Requires auth
+  - [ ] `/profile` - Requires auth
+  - [ ] `/` (Landing) - Public
+
+### 4.75.7 Auth UI Components
+- [ ] Create `src/pages/Login.jsx`:
+  - [ ] "Sign in with Google" button (primary)
+  - [ ] Email/password form (fallback)
+  - [ ] "Forgot password?" link
+  - [ ] "Don't have an account? Sign up" link
+  - [ ] Beautiful glassmorphism design
+  - [ ] Loading states
+  - [ ] Error messages
+- [ ] Create `src/pages/Signup.jsx`:
+  - [ ] "Sign up with Google" button (primary)
+  - [ ] Email/password/name form (fallback)
+  - [ ] Terms of service checkbox
+  - [ ] "Already have an account? Login" link
+- [ ] Create `src/components/auth/AuthCallback.jsx`:
+  - [ ] Handle OAuth redirect
+  - [ ] Extract tokens
+  - [ ] Redirect to dashboard
+- [ ] Create `src/components/auth/UserMenu.jsx`:
+  - [ ] User avatar dropdown
+  - [ ] Profile link
+  - [ ] Dashboard link
+  - [ ] Logout button
+  - [ ] Credits remaining badge
+
+### 4.75.8 User Dashboard
+- [ ] Create `src/pages/Dashboard.jsx`:
+  - [ ] Welcome message with user name
+  - [ ] Credits remaining card
+  - [ ] Resume history (list of past analyses)
+  - [ ] Quick stats:
+    - [ ] Total resumes analyzed
+    - [ ] Average ATS score
+    - [ ] Improvement over time (chart)
+  - [ ] "Analyze New Resume" CTA
+- [ ] Create `src/components/dashboard/ResumeCard.jsx`:
+  - [ ] Resume file name
+  - [ ] Upload date
+  - [ ] ATS score badge
+  - [ ] "View Analysis" button
+  - [ ] "Re-analyze" button
+  - [ ] "Delete" button
+
+### 4.75.9 User Profile Page
+- [ ] Create `src/pages/Profile.jsx`:
+  - [ ] Avatar upload
+  - [ ] Edit name
+  - [ ] Email (read-only)
+  - [ ] Subscription tier badge
+  - [ ] Credits remaining
+  - [ ] "Upgrade Plan" button
+  - [ ] "Change Password" button
+  - [ ] "Delete Account" button (with confirmation)
+
+### 4.75.10 Resume History & Versioning
+- [ ] Update `src/services/resumeAnalyzer.js`:
+  - [ ] Save resume to Supabase Storage
+  - [ ] Save analysis to database
+  - [ ] Link to user account
+  - [ ] Track version number
+- [ ] Create `src/services/resumeHistory.js`:
+  - [ ] `getResumeHistory(userId)` - Fetch all resumes
+  - [ ] `getAnalysis(analysisId)` - Fetch specific analysis
+  - [ ] `deleteResume(resumeId)` - Delete resume
+  - [ ] `compareVersions(id1, id2)` - Compare two analyses
+
+### 4.75.11 Credits System
+- [ ] Implement credit deduction:
+  - [ ] Free tier: 10 credits
+  - [ ] Basic tier: 50 credits/month
+  - [ ] Pro tier: Unlimited
+- [ ] Update `src/services/resumeAnalyzer.js`:
+  - [ ] Check credits before analysis
+  - [ ] Deduct 1 credit after successful analysis
+  - [ ] Show "Out of credits" error
+- [ ] Create `src/components/dashboard/CreditsCard.jsx`:
+  - [ ] Show remaining credits
+  - [ ] Progress bar
+  - [ ] "Buy More Credits" button
+
+### 4.75.12 Update Existing Components
+- [ ] Update `src/components/landing/UploadZone.jsx`:
+  - [ ] Check if user is logged in
+  - [ ] Check credits before upload
+  - [ ] Save resume to Supabase Storage
+  - [ ] Link analysis to user account
+- [ ] Update `src/pages/Results.jsx`:
+  - [ ] Load analysis from database (if logged in)
+  - [ ] Show "Save Analysis" button (if not logged in)
+  - [ ] Add "Share" button (generate shareable link)
+- [ ] Update `src/App.jsx`:
+  - [ ] Add auth routes
+  - [ ] Add protected routes
+  - [ ] Add UserMenu to header
+
+### 4.75.13 Environment Variables
+- [ ] Update `.env`:
+  ```
+  # Supabase
+  VITE_SUPABASE_URL=https://xxx.supabase.co
+  VITE_SUPABASE_ANON_KEY=xxx
+  
+  # Google OAuth
+  VITE_GOOGLE_CLIENT_ID=xxx
+  
+  # App
+  VITE_APP_URL=http://localhost:5173
+  ```
+
+### 4.75.14 Testing
+- [ ] Test Google OAuth flow
+- [ ] Test email signup/login
+- [ ] Test protected routes
+- [ ] Test resume upload with auth
+- [ ] Test resume history
+- [ ] Test credits system
+- [ ] Test logout
+- [ ] Test token refresh
+
+### 4.75.15 Security
+- [ ] Implement CSRF protection
+- [ ] Sanitize user inputs
+- [ ] Validate file uploads server-side
+- [ ] Rate limiting (Supabase Edge Functions)
+- [ ] Secure cookies (httpOnly, secure, sameSite)
+- [ ] XSS protection
+- [ ] SQL injection protection (Supabase handles this)
+
+---
+
+## �💰 Phase 5: Paywall & Monetization (Day 7)
 
 ### 5.1 Paywall Components (`src/components/paywall/`)
 
